@@ -33,3 +33,143 @@ The goal of this project is to showcase blockchain development skills by buildin
    ```bash
    git clone https://github.com/your-username/your-repo-name.git
    cd your-repo-name
+
+2. Install dependencies:
+   npm install
+   npm install @openzeppelin/contracts
+
+3. Set up Hardhat (optional, if using Hardhat):
+   npx hardhat
+   Follow the prompts to create a basic Hardhat project.
+
+4. Configure environment: Create a .env file in the root directory with the following:
+   PRIVATE_KEY=your-private-key
+   INFURA_API_KEY=your-infura-api-key
+   ETHERSCAN_API_KEY=your-etherscan-api-key
+   Update hardhat.config.js to use these variables:
+   require("@nomicfoundation/hardhat-toolbox");
+   require("dotenv").config();
+
+   module.exports = {
+     solidity: "0.8.0",
+     networks: {
+       sepolia: {
+         url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
+         accounts: [process.env.PRIVATE_KEY]
+       }
+     },
+     etherscan: {
+       apiKey: process.env.ETHERSCAN_API_KEY
+     }
+   };
+
+## Deployment
+
+1. Compile contracts:
+   npx hardhat compile
+
+2. Deploy contracts:
+   Create a deployment script (e.g., scripts/deploy.js):
+   const hre = require("hardhat");
+
+   async function main() {
+     const [deployer] = await hre.ethers.getSigners();
+
+     // Deploy Token
+     const Token = await hre.ethers.getContractFactory("Token");
+     const token = await Token.deploy("Test Token", "TTK", hre.ethers.parseEther("1000000"));
+     await token.waitForDeployment();
+
+     // Deploy Factory
+     const Factory = await hre.ethers.getContractFactory("Factory");
+     const factory = await Factory.deploy();
+     await factory.waitForDeployment();
+
+     // Deploy Router
+     const Router = await hre.ethers.getContractFactory("Router");
+     const router = await Router.deploy(factory.target);
+     await router.waitForDeployment();
+
+     // Deploy Staking Token (LP Token)
+     const StakingToken = await hre.ethers.getContractFactory("Token");
+     const stakingToken = await StakingToken.deploy("LP Token", "LPT", hre.ethers.parseEther("1000000"));
+     await stakingToken.waitForDeployment();
+
+     // Deploy Reward Token
+     const RewardToken = await hre.ethers.getContractFactory("Token");
+     const rewardToken = await RewardToken.deploy("Reward Token", "RWD", hre.ethers.parseEther("100000"));
+     await rewardToken.waitForDeployment();
+
+     // Deploy Staking
+     const Staking = await hre.ethers.getContractFactory("Staking");
+     const staking = await Staking.deploy(
+       stakingToken.target,
+       rewardToken.target,
+       Math.floor(Date.now() / 1000) + 60, // Start in 1 minute
+       Math.floor(Date.now() / 1000) + 604800, // End in 1 week
+       hre.ethers.parseEther("50000") // Total rewards
+     );
+     await staking.waitForDeployment();
+
+     console.log("Token deployed to:", token.target);
+     console.log("Factory deployed to:", factory.target);
+     console.log("Router deployed to:", router.target);
+     console.log("Staking Token deployed to:", stakingToken.target);
+     console.log("Reward Token deployed to:", rewardToken.target);
+     console.log("Staking deployed to:", staking.target);
+   }
+
+   main().catch((error) => {
+     console.error(error);
+     process.exitCode = 1;
+   });
+   Run the deployment:
+   npx hardhat run scripts/deploy.js --network sepolia
+
+## Usage
+
+1. Add Liquidity:
+   - Approve the Router to spend your tokens.
+   - Call addLiquidity on the Router contract with token addresses and amounts.
+
+2. Swap Tokens:
+   - Approve the Router to spend your input token.
+   - Call swapExactTokensForTokens or swapTokensForExactTokens with the desired path.
+
+3. Stake LP Tokens:
+   - Approve the Staking contract to spend your LP tokens.
+   - Call stake with the amount to stake.
+
+4. Withdraw Rewards:
+   - Call getReward on the Staking contract to claim rewards.
+   - Call withdraw to unstake LP tokens.
+
+## Contract Interaction Diagram
+
+  [User]
+    |
+    |----> [Token.sol] <----> [Factory.sol] ----> [Pair.sol]
+    |          |                    |                |
+    |          |                    |                |
+    |----> [Router.sol] <----------|                |
+    |          |                                    |
+    |----> [Staking.sol] <--------------------------|
+
+- Token: Base ERC-20 token for trading and rewards.
+- Factory: Creates Pair contracts for liquidity pools.
+- Pair: Manages liquidity and swaps for a token pair.
+- Router: Simplifies interactions with Pair contracts.
+- Staking: Manages staking of LP tokens and reward distribution.
+
+## Potential Improvements
+- Add tests using Hardhat or Mocha/Chai.
+- Implement a frontend interface with React and ethers.js.
+- Include fee mechanisms for swaps (e.g., 0.3% fee).
+- Enhance security with reentrancy guards and formal audits.
+
+## License
+This project is licensed under the MIT License.
+
+---
+
+Feel free to contribute or reach out with questions!
