@@ -146,14 +146,8 @@ The goal of this project is to showcase blockchain development skills by buildin
 
 ## Contract Interaction Diagram
 
-  [User]
-    |
-    |----> [Token.sol] <----> [Factory.sol] ----> [Pair.sol]
-    |          |                    |                |
-    |          |                    |                |
-    |----> [Router.sol] <----------|                |
-    |          |                                    |
-    |----> [Staking.sol] <--------------------------|
+![image](https://github.com/user-attachments/assets/e3e6a508-35b7-4e16-acfc-ef7dd139fc77)
+
 
 - Token: Base ERC-20 token for trading and rewards.
 - Factory: Creates Pair contracts for liquidity pools.
