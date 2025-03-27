@@ -31,7 +31,7 @@ The goal of this project is to showcase blockchain development skills by buildin
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/your-repo-name.git
+   git clone https://github.com/1337niy/DEX.git
    cd your-repo-name
 
 2. Install dependencies:
